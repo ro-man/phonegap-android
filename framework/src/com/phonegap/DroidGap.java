@@ -10,6 +10,7 @@ package com.phonegap;
 import org.json.JSONArray;
 import org.json.JSONException;
 import android.app.AlertDialog;
+import android.widget.EditText;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -286,6 +287,7 @@ public class DroidGap extends PhonegapActivity {
 		this.addService("Storage", "com.phonegap.Storage");
 		this.addService("Temperature", "com.phonegap.TempListener");
 		this.addService("FileTransfer", "com.phonegap.FileTransfer");
+		this.addService("Capture", "com.phonegap.Capture");
 	}
         
 	/**
@@ -599,6 +601,10 @@ public class DroidGap extends PhonegapActivity {
      */
     protected void onPause() {
         super.onPause();
+        if (this.appView == null) {
+        	return;
+        }
+        
        	// Send pause event to JavaScript
        	this.appView.loadUrl("javascript:try{PhoneGap.onPause.fire();}catch(e){};"); 
 
@@ -619,6 +625,9 @@ public class DroidGap extends PhonegapActivity {
      */
     protected void onResume() {
         super.onResume();
+        if (this.appView == null) {
+        	return;
+        }
 
        	// Send resume event to JavaScript
        	this.appView.loadUrl("javascript:try{PhoneGap.onResume.fire();}catch(e){};");
@@ -647,6 +656,8 @@ public class DroidGap extends PhonegapActivity {
     public void onDestroy() {
     	super.onDestroy();
     	
+        if (this.appView != null) {
+    	
     	// Make sure pause event is sent if onPause hasn't been called before onDestroy
        	this.appView.loadUrl("javascript:try{PhoneGap.onPause.fire();}catch(e){};");
 
@@ -662,6 +673,7 @@ public class DroidGap extends PhonegapActivity {
     	if (this.callbackServer != null) {
     		this.callbackServer.destroy();
     	}
+        }
     }
 
     /**
@@ -773,7 +785,7 @@ public class DroidGap extends PhonegapActivity {
 			
         	// Calling PluginManager.exec() to call a native service using 
         	// prompt(this.stringify(args), "gap:"+this.stringify([service, action, callbackId, true]));
-        	if (defaultValue.substring(0, 4).equals("gap:")) {
+        	if (defaultValue != null && defaultValue.length() > 3 && defaultValue.substring(0, 4).equals("gap:")) {
         		JSONArray array;
         		try {
         			array = new JSONArray(defaultValue.substring(4));
@@ -814,9 +826,28 @@ public class DroidGap extends PhonegapActivity {
         	
         	// Show dialog
         	else {
-        		//@TODO:
-        		result.confirm("");
-        	}
+				final JsPromptResult res = result;
+				AlertDialog.Builder dlg = new AlertDialog.Builder(this.ctx);
+				dlg.setMessage(message);
+				final EditText input = new EditText(this.ctx);
+				dlg.setView(input);
+				dlg.setCancelable(false);
+				dlg.setPositiveButton(android.R.string.ok, 
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+						String usertext = input.getText().toString();
+						res.confirm(usertext);
+					}
+				});
+				dlg.setNegativeButton(android.R.string.cancel, 
+					new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int which) {
+						res.cancel();
+					}
+				});
+				dlg.create();
+				dlg.show();
+			}
         	return true;
         }
 
@@ -1078,6 +1109,9 @@ public class DroidGap extends PhonegapActivity {
      */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (this.appView == null) {
+        	return super.onKeyDown(keyCode, event);
+        }
 
     	// If back key
     	if (keyCode == KeyEvent.KEYCODE_BACK) {

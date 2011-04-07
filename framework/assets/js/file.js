@@ -6,21 +6,19 @@
  * Copyright (c) 2010, IBM Corporation
  */
 
-/**
- * This class provides generic read and write access to the mobile device file system.
- * They are not used to read files from a server.
- */
+if (!PhoneGap.hasResource("file")) {
+PhoneGap.addResource("file");
 
 /**
  * This class provides some useful information about a file.
  * This is the fields returned when navigator.fileMgr.getFileProperties() 
  * is called.
  */
-function FileProperties(filePath) {
+FileProperties = function(filePath) {
     this.filePath = filePath;
     this.size = 0;
     this.lastModifiedDate = null;
-}
+};
 
 /**
  * Represents a single file.
@@ -31,17 +29,17 @@ function FileProperties(filePath) {
  * lastModifiedDate {Date} last modified date
  * size {Number} size of the file in bytes
  */
-function File(name, fullPath, type, lastModifiedDate, size) {
+File = function(name, fullPath, type, lastModifiedDate, size) {
 	this.name = name || null;
     this.fullPath = fullPath || null;
 	this.type = type || null;
     this.lastModifiedDate = lastModifiedDate || null;
     this.size = size || 0;
-}
+};
 
-function FileError() {
+FileError = function() {
    this.code = null;
-}
+};
 
 // File error codes
 // Found in DOMException
@@ -64,8 +62,8 @@ FileError.PATH_EXISTS_ERR = 12;
 // File manager
 //-----------------------------------------------------------------------------
 
-function FileMgr() {
-}
+FileMgr = function() {
+};
 
 FileMgr.prototype.getFileProperties = function(filePath) {
     return PhoneGap.exec(null, null, "File", "getFileProperties", [filePath]);
@@ -129,7 +127,7 @@ PhoneGap.addConstructor(function() {
  *      The root directory is the root of the file system.
  *      To read from the SD card, the file name is "sdcard/my_file.txt"
  */
-function FileReader() {
+FileReader = function() {
     this.fileName = "";
 
     this.readyState = 0;
@@ -147,7 +145,7 @@ function FileReader() {
     this.onerror = null;        // When the read has failed (see errors).
     this.onloadend = null;      // When the request has completed (either in success or failure).
     this.onabort = null;        // When the read has been aborted. For instance, by invoking the abort() method.
-}
+};
 
 // States
 FileReader.EMPTY = 0;
@@ -225,6 +223,7 @@ FileReader.prototype.readAsText = function(file, encoding) {
 
             // If onload callback
             if (typeof me.onload === "function") {
+                me.onload({"type":"load", "target":me});
             }
 
             // DONE state
@@ -245,7 +244,9 @@ FileReader.prototype.readAsText = function(file, encoding) {
             }
 
             // Save error
-            me.error = e;
+		    var fileError = new FileError();
+		    fileError.code = e;
+		    me.error = fileError;
 
             // If onerror callback
             if (typeof me.onerror === "function") {
@@ -327,7 +328,9 @@ FileReader.prototype.readAsDataURL = function(file) {
             }
 
             // Save error
-            me.error = e;
+            var fileError = new FileError();
+            fileError.code = e;
+            me.error = fileError;
 
             // If onerror callback
             if (typeof me.onerror === "function") {
@@ -379,7 +382,7 @@ FileReader.prototype.readAsArrayBuffer = function(file) {
  * @param file {File} File object containing file properties
  * @param append if true write to the end of the file, otherwise overwrite the file
  */
-function FileWriter(file) {
+FileWriter = function(file) {
     this.fileName = "";
     this.length = 0;
 	if (file) {
@@ -403,7 +406,7 @@ function FileWriter(file) {
     this.onwriteend = null;		// When the request has completed (either in success or failure).
     this.onabort = null;		// When the write has been aborted. For instance, by invoking the abort() method.
     this.onerror = null;		// When the write has failed (see errors).
-}
+};
 
 // States
 FileWriter.INIT = 0;
@@ -502,7 +505,9 @@ FileWriter.prototype.write = function(text) {
             }
 
             // Save error
-            me.error = e;
+            var fileError = new FileError();
+            fileError.code = e;
+            me.error = fileError;
 
             // If onerror callback
             if (typeof me.onerror === "function") {
@@ -615,7 +620,9 @@ FileWriter.prototype.truncate = function(size) {
             }
 
             // Save error
-            me.error = e;
+            var fileError = new FileError();
+            fileError.code = e;
+            me.error = fileError;
 
             // If onerror callback
             if (typeof me.onerror === "function") {
@@ -633,7 +640,7 @@ FileWriter.prototype.truncate = function(size) {
     );
 };
 
-function LocalFileSystem() {
+LocalFileSystem = function() {
 };
 
 // File error codes
@@ -760,7 +767,7 @@ LocalFileSystem.prototype._castDate = function(pluginResult) {
  * 
  * {Date} modificationTime (readonly)
  */
-function Metadata() {
+Metadata = function() {
     this.modificationTime=null;
 };
 
@@ -770,7 +777,7 @@ function Metadata() {
  * @param {boolean} create file or directory if it doesn't exist 
  * @param {boolean} exclusive if true the command will fail if the file or directory exists
  */
-function Flags(create, exclusive) {
+Flags = function(create, exclusive) {
     this.create = create || false;
     this.exclusive = exclusive || false;
 };
@@ -781,7 +788,7 @@ function Flags(create, exclusive) {
  * {DOMString} name the unique name of the file system (readonly)
  * {DirectoryEntry} root directory of the file system (readonly)
  */
-function FileSystem() {
+FileSystem = function() {
     this.name = null;
     this.root = null;
 };
@@ -795,7 +802,7 @@ function FileSystem() {
  * {DOMString} fullPath the absolute full path to the directory (readonly)
  * {FileSystem} filesystem on which the directory resides (readonly)
  */
-function DirectoryEntry() {
+DirectoryEntry = function() {
     this.isFile = false;
     this.isDirectory = true;
     this.name = null;
@@ -911,7 +918,7 @@ DirectoryEntry.prototype.removeRecursively = function(successCallback, errorCall
 /**
  * An interface that lists the files and directories in a directory.
  */
-function DirectoryReader(fullPath){
+DirectoryReader = function(fullPath){
 	this.fullPath = fullPath || null;    
 };
 
@@ -934,7 +941,7 @@ DirectoryReader.prototype.readEntries = function(successCallback, errorCallback)
  * {DOMString} fullPath the absolute full path to the file (readonly)
  * {FileSystem} filesystem on which the directory resides (readonly)
  */
-function FileEntry() {
+FileEntry = function() {
     this.isFile = true;
     this.isDirectory = false;
     this.name = null;
@@ -1048,3 +1055,4 @@ PhoneGap.addConstructor(function() {
     if(typeof window.requestFileSystem == "undefined") window.requestFileSystem  = pgLocalFileSystem.requestFileSystem;
     if(typeof window.resolveLocalFileSystemURI == "undefined") window.resolveLocalFileSystemURI = pgLocalFileSystem.resolveLocalFileSystemURI;
 });
+};
